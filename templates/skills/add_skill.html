@@ -42,10 +42,24 @@
                 
                 <div>
                     <label for="id_skill" class="block text-gray-700 font-semibold mb-1">Skill</label>
-                    <select name="skill" id="id_skill" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required disabled>
-                        <option value="">First select a category...</option>
+                    <select name="skill" id="id_skill" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                        <option value="">Select a skill...</option>
+                        <!-- Show trending skills initially -->
+                        {% if not form.skill_category.value %}
+                            <optgroup label="Trending Skills">
+                                {% for skill in trending_skills %}
+                                    <option value="{{ skill.id }}" {% if form.skill.value == skill.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ skill.name }} ({{ skill.category.name }})
+                                    </option>
+                                {% endfor %}
+                            </optgroup>
+                        {% endif %}
+                        <!-- Category-filtered skills will be loaded here via AJAX -->
                     </select>
                     {% if form.skill.errors %}<div class="text-red-600 text-sm mt-1">{{ form.skill.errors.0 }}</div>{% endif %}
+                    <div class="text-sm text-gray-600 mt-1">
+                        <span id="skill-hint">Trending skills are shown. Select a category to see more skills.</span>
+                    </div>
                 </div>
                 
                 <div>
@@ -88,6 +102,28 @@
 
 <script>
 $(document).ready(function() {
+    var trendingSkills = [
+        {% for skill in trending_skills %}
+        {id: {{ skill.id }}, name: "{{ skill.name }}", category: "{{ skill.category.name }}"},
+        {% endfor %}
+    ];
+    
+    function showTrendingSkills() {
+        var skillSelect = $('#id_skill');
+        skillSelect.html('<option value="">Select a skill...</option>');
+        
+        if (trendingSkills.length > 0) {
+            skillSelect.append('<optgroup label="Trending Skills">');
+            $.each(trendingSkills, function(index, skill) {
+                skillSelect.append('<option value="' + skill.id + '">' + skill.name + ' (' + skill.category + ')</option>');
+            });
+            skillSelect.append('</optgroup>');
+        }
+        
+        $('#skill-hint').text('Trending skills are shown. Select a category to see more skills.');
+        skillSelect.prop('disabled', false);
+    }
+    
     $('#id_skill_category').change(function() {
         var categoryId = $(this).val();
         var skillSelect = $('#id_skill');
@@ -95,6 +131,7 @@ $(document).ready(function() {
         if (categoryId) {
             skillSelect.prop('disabled', true);
             skillSelect.html('<option value="">Loading skills...</option>');
+            $('#skill-hint').text('Loading skills for selected category...');
             
             $.ajax({
                 url: '{% url "skills:get_skills_by_category" %}',
@@ -105,17 +142,24 @@ $(document).ready(function() {
                         skillSelect.append('<option value="' + skill.id + '">' + skill.name + '</option>');
                     });
                     skillSelect.prop('disabled', false);
+                    $('#skill-hint').text('Skills filtered by selected category.');
                 },
                 error: function() {
                     skillSelect.html('<option value="">Error loading skills</option>');
                     skillSelect.prop('disabled', false);
+                    $('#skill-hint').text('Error loading skills. Please try again.');
                 }
             });
         } else {
-            skillSelect.html('<option value="">First select a category...</option>');
-            skillSelect.prop('disabled', true);
+            // When no category is selected, show trending skills
+            showTrendingSkills();
         }
     });
+    
+    // If no category is initially selected, show trending skills
+    if (!$('#id_skill_category').val()) {
+        showTrendingSkills();
+    }
     
     // Trigger change event if category is already selected (for editing)
     if ($('#id_skill_category').val()) {

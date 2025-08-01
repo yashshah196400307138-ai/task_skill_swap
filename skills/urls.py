@@ -9,6 +9,7 @@ urlpatterns = [
     path('trending/more/', views.TrendingSkillsMoreView.as_view(), name='trending_skills_more'),
     path('categories/', views.SkillCategoryListView.as_view(), name='category_list'),
     path('category/<int:category_id>/', views.SkillCategoryDetailView.as_view(), name='category_detail'),
+    path('<int:pk>/', views.SkillDetailView.as_view(), name='skill_detail'),
     
     # Add Skill
     path('add/', views.AddSkillView.as_view(), name='add_skill'),
@@ -30,6 +31,10 @@ urlpatterns = [
     # Skill matching
     path('matches/', views.SkillMatchListView.as_view(), name='match_list'),
     path('matches/<int:pk>/dismiss/', views.dismiss_skill_match, name='match_dismiss'),
+    
+    # Find tutors
+    path('<int:skill_id>/find-tutors/', views.FindTutorsView.as_view(), name='find_tutors'),
+    path('tutor/<int:user_id>/', views.TutorProfileView.as_view(), name='tutor_profile'),
     
     # AJAX endpoints
     path('ajax/skill-autocomplete/', views.SkillAutocompleteView.as_view(), name='skill_autocomplete'),

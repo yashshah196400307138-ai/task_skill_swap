@@ -5,7 +5,8 @@ from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.http import JsonResponse
-from django.db.models import Count
+from django.db.models import Count, Avg
+from django.contrib.auth.models import User
 
 from .models import Skill, SkillCategory, OfferedSkill, DesiredSkill, SkillMatch
 from .forms import OfferedSkillForm, DesiredSkillForm, SkillSearchForm
@@ -249,6 +250,17 @@ class AddSkillView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.user = self.request.user
         return super().form_valid(form)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get trending skills (top 10 by offered count)
+        trending_skills = (Skill.objects
+                         .filter(category__is_active=True)
+                         .annotate(offered_count=Count('offered_by_users'))
+                         .filter(offered_count__gt=0)
+                         .order_by('-offered_count', 'name')[:10])
+        context['trending_skills'] = trending_skills
+        return context
 
 
 @login_required
@@ -290,4 +302,77 @@ class TrendingSkillsMoreView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'All Trending Skills'
+        return context
+
+
+class SkillDetailView(DetailView):
+    """View to show skill details with tutors and find tutors option"""
+    model = Skill
+    template_name = 'skills/skill_detail.html'
+    context_object_name = 'skill'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        skill = self.get_object()
+        
+        # Get tutors offering this skill (top 3 by rating)
+        top_tutors = (OfferedSkill.objects
+                     .filter(skill=skill, is_active=True)
+                     .select_related('user')
+                     .order_by('-average_rating', '-total_sessions')[:3])
+        
+        context['top_tutors'] = top_tutors
+        context['total_tutors'] = OfferedSkill.objects.filter(skill=skill, is_active=True).count()
+        
+        return context
+
+
+class FindTutorsView(ListView):
+    """View to show all tutors who offer a specific skill"""
+    model = OfferedSkill
+    template_name = 'skills/find_tutors.html'
+    context_object_name = 'tutors'
+    paginate_by = 12
+    
+    def get_queryset(self):
+        skill_id = self.kwargs['skill_id']
+        return (OfferedSkill.objects
+                .filter(skill_id=skill_id, is_active=True)
+                .select_related('user', 'skill')
+                .order_by('-average_rating', '-total_sessions'))
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        skill_id = self.kwargs['skill_id']
+        context['skill'] = get_object_or_404(Skill, id=skill_id)
+        return context
+
+
+class TutorProfileView(DetailView):
+    """View to show tutor profile with skills and rating"""
+    model = User
+    template_name = 'skills/tutor_profile.html'
+    context_object_name = 'tutor'
+    pk_url_kwarg = 'user_id'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        tutor = self.get_object()
+        
+        # Get all skills offered by this tutor
+        offered_skills = (OfferedSkill.objects
+                         .filter(user=tutor, is_active=True)
+                         .select_related('skill', 'skill__category')
+                         .order_by('-average_rating', 'skill__name'))
+        
+        context['offered_skills'] = offered_skills
+        
+        # Calculate overall rating
+        overall_rating = offered_skills.aggregate(
+            avg_rating=Avg('average_rating'),
+            total_sessions=Count('total_sessions')
+        )
+        context['overall_rating'] = overall_rating['avg_rating'] or 0
+        context['total_sessions'] = sum([skill.total_sessions for skill in offered_skills])
+        
         return context
