@@ -18,6 +18,23 @@ class SkillListView(ListView):
     
     def get_queryset(self):
         return Skill.objects.filter(category__is_active=True)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get trending skills based on most offered skills (limited to 15)
+        from django.db.models import Count
+        trending_skills = (Skill.objects
+                          .filter(category__is_active=True)
+                          .annotate(offered_count=Count('offered_by_users'))
+                          .filter(offered_count__gt=0)
+                          .order_by('-offered_count', 'name')[:15])
+        
+        context['trending_skills'] = trending_skills
+        context['categories'] = SkillCategory.objects.filter(is_active=True)
+        context['show_more_url'] = 'skills:trending_skills_more'
+        
+        return context
 
 
 class SkillCategoryListView(ListView):
@@ -177,3 +194,35 @@ class AddSkillView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.user = self.request.user
         return super().form_valid(form)
+
+
+@login_required
+def get_skills_by_category(request):
+    """AJAX view to get skills by category"""
+    category_id = request.GET.get('category_id')
+    if category_id:
+        skills = Skill.objects.filter(category_id=category_id).order_by('name')
+        data = [{'id': skill.id, 'name': skill.name} for skill in skills]
+        return JsonResponse({'skills': data})
+    return JsonResponse({'skills': []})
+
+
+class TrendingSkillsMoreView(LoginRequiredMixin, ListView):
+    """View to show more trending skills - requires login"""
+    model = Skill
+    template_name = 'skills/trending_skills_more.html'
+    context_object_name = 'trending_skills'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        from django.db.models import Count
+        return (Skill.objects
+                .filter(category__is_active=True)
+                .annotate(offered_count=Count('offered_by_users'))
+                .filter(offered_count__gt=0)
+                .order_by('-offered_count', 'name'))
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'All Trending Skills'
+        return context
