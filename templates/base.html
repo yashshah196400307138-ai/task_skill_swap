@@ -117,13 +117,6 @@
                 <!-- User Menu -->
                 <div class="flex items-center space-x-4">
                     {% if user.is_authenticated %}
-                        <!-- Search -->
-                        <div class="relative hidden lg:block">
-                            <input type="text" placeholder="&nbsp;Search skills or users..." 
-                                   class="w-64 px-4 py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                        </div>
-                        
                         <!-- Notifications -->
                         <div class="relative">
                             <button id="notificationBtn" class="relative p-2 text-gray-600 hover:text-blue-600 transition-colors">

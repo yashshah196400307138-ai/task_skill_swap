@@ -55,8 +55,8 @@ class SkillListView(ListView):
         # Determine if any filters are applied
         has_filters = bool(self.request.GET.get('category') or self.request.GET.get('skill'))
         
-        # Show trending skills only if user is logged in and no filters are applied
-        show_trending = self.request.user.is_authenticated and not has_filters
+        # Show trending skills by default when no filters are applied
+        show_trending = not has_filters
         context['show_trending'] = show_trending
         
         if show_trending:

@@ -97,14 +97,9 @@
                             {% endif %}
                             
                             <div class="flex space-x-2">
-                                <a href="{% url 'skills:skill_detail' skill.skill.id %}" class="flex-1 bg-gray-100 text-gray-700 py-2 px-3 rounded-lg text-center text-sm hover:bg-gray-200 transition-colors">
+                                <a href="{% url 'skills:skill_detail' skill.skill.id %}" class="w-full bg-gray-100 text-gray-700 py-2 px-3 rounded-lg text-center text-sm hover:bg-gray-200 transition-colors">
                                     <i class="fas fa-info-circle mr-1"></i>Skill Info
                                 </a>
-                                {% if user.is_authenticated and user != tutor %}
-                                    <button onclick="requestSkill({{ tutor.id }}, '{{ tutor.first_name|default:tutor.username }}', '{{ skill.skill.name }}')" class="flex-1 bg-blue-600 text-white py-2 px-3 rounded-lg text-center text-sm hover:bg-blue-700 transition-colors">
-                                        <i class="fas fa-paper-plane mr-1"></i>Request
-                                    </button>
-                                {% endif %}
                             </div>
                         </div>
                         {% endfor %}
@@ -164,15 +159,7 @@
 </div>
 
 <script>
-function requestSkill(tutorId, tutorName, skillName) {
-    document.getElementById('tutorId').value = tutorId;
-    document.getElementById('tutorName').textContent = tutorName;
-    document.getElementById('skillName').textContent = 'for ' + skillName;
-    document.getElementById('subject').value = 'Tutoring Request for ' + skillName;
-    document.getElementById('message').placeholder = 'Hi! I\'m interested in learning ' + skillName + ' and would love to schedule a session with you.';
-    document.getElementById('requestModal').classList.remove('hidden');
-    document.getElementById('requestModal').classList.add('flex');
-}
+
 
 function requestGeneral(tutorId, tutorName) {
     document.getElementById('tutorId').value = tutorId;
