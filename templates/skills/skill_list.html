@@ -21,25 +21,30 @@
             <div class="max-w-4xl mx-auto bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-8">
                 <form method="get" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <!-- Search Input -->
-                        <div class="relative">
-                            <input type="text" 
-                                   name="search" 
-                                   value="{{ request.GET.search }}"
-                                   placeholder="Search skills..." 
-                                   class="w-full px-4 py-3 rounded-lg border-0 text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-blue-500">
-                            <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                        </div>
-                        
                         <!-- Category Filter -->
                         <div class="relative">
-                            <select name="category" class="w-full px-4 py-3 rounded-lg border-0 text-gray-800 focus:ring-2 focus:ring-blue-500 appearance-none">
-                                <option value="">All Categories</option>
-                                {% for category in categories %}
-                                                                    <option value="{{ category.id }}" {% if request.GET.category|add:"0" == category.id %}selected{% endif %}>
-                                    {{ category.name }}
-                                </option>
+                            <select name="category" id="id_category" class="w-full px-4 py-3 rounded-lg border-0 text-gray-800 focus:ring-2 focus:ring-blue-500 appearance-none">
+                                <option value="">Select Category...</option>
+                                {% for category in search_form.category.field.queryset %}
+                                    <option value="{{ category.id }}" {% if request.GET.category|add:"0" == category.id %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
                                 {% endfor %}
+                            </select>
+                            <i class="fas fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                        </div>
+                        
+                        <!-- Skill Filter -->
+                        <div class="relative">
+                            <select name="skill" id="id_skill" class="w-full px-4 py-3 rounded-lg border-0 text-gray-800 focus:ring-2 focus:ring-blue-500 appearance-none" {% if not request.GET.category %}disabled{% endif %}>
+                                <option value="">Select Skill...</option>
+                                {% if request.GET.skill %}
+                                    {% for skill in search_form.skill.field.queryset %}
+                                        <option value="{{ skill.id }}" {% if request.GET.skill|add:"0" == skill.id %}selected{% endif %}>
+                                            {{ skill.name }}
+                                        </option>
+                                    {% endfor %}
+                                {% endif %}
                             </select>
                             <i class="fas fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                         </div>
@@ -50,7 +55,6 @@
                                 <option value="name" {% if request.GET.sort == 'name' %}selected{% endif %}>Sort by Name</option>
                                 <option value="popular" {% if request.GET.sort == 'popular' %}selected{% endif %}>Most Popular</option>
                                 <option value="recent" {% if request.GET.sort == 'recent' %}selected{% endif %}>Recently Added</option>
-                                <option value="popular" {% if request.GET.sort == 'popular' %}selected{% endif %}>Most Popular</option>
                             </select>
                             <i class="fas fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                         </div>
@@ -58,7 +62,7 @@
                     
                     <div class="flex flex-col sm:flex-row gap-4 justify-center">
                         <button type="submit" class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-all">
-                            <i class="fas fa-search mr-2"></i>Search Skills
+                            <i class="fas fa-filter mr-2"></i>Apply Filters
                         </button>
                         <a href="{% url 'skills:skill_list' %}" class="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-all text-center">
                             <i class="fas fa-times mr-2"></i>Clear Filters
@@ -102,23 +106,21 @@
         <div class="flex flex-col md:flex-row justify-between items-center mb-8">
             <div>
                 <h2 class="text-2xl lg:text-3xl font-bold text-gray-800 mb-2">
-                    {% if request.GET.search %}
-                        Search Results for "{{ request.GET.search }}"
-                    {% elif request.GET.category %}
-                        Skills in {{ selected_category.name|default:"Selected Category" }}
+                    {% if selected_skill %}
+                        Results for "{{ selected_skill.name }}"
+                    {% elif selected_category %}
+                        Skills in {{ selected_category.name }}
                     {% else %}
                         All Available Skills
                     {% endif %}
                 </h2>
                 <p class="text-gray-600">
                     Showing {{ skills.count }} skill{{ skills.count|pluralize }} 
-                    {% if request.GET.search or request.GET.category %}
+                    {% if selected_skill or selected_category %}
                         matching your criteria
                     {% endif %}
                 </p>
             </div>
-            
-
         </div>
         
         <!-- Skills Grid -->
@@ -207,10 +209,10 @@
                 </div>
                 <h3 class="text-2xl font-bold text-gray-800 mb-4">No Skills Found</h3>
                 <p class="text-gray-600 mb-8 max-w-md mx-auto">
-                    {% if request.GET.search %}
-                        We couldn't find any skills matching "{{ request.GET.search }}". Try adjusting your search terms.
-                    {% elif request.GET.category %}
-                        No skills available in this category yet. Be the first to add one!
+                    {% if selected_skill %}
+                        No results found for "{{ selected_skill.name }}". Try selecting a different skill or clear the filters.
+                    {% elif selected_category %}
+                        No skills available in {{ selected_category.name }} category yet. Be the first to add one!
                     {% else %}
                         No skills are available yet. Be the first to add your skills to the platform!
                     {% endif %}
@@ -237,6 +239,7 @@
 </section>
 
 <!-- Trending Skills Section -->
+{% if show_trending %}
 <section class="py-16 bg-white" id="trending-skills">
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
@@ -268,7 +271,7 @@
                                 <i class="fas fa-fire text-orange-500 text-sm"></i>
                                 <span class="text-sm text-gray-600">Trending</span>
                             </div>
-                            <a href="{% url 'skills:skill_list' %}?search={{ skill.name }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            <a href="?skill={{ skill.id }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
                                 Find Teachers <i class="fas fa-arrow-right ml-1"></i>
                             </a>
                         </div>
@@ -278,15 +281,9 @@
             
             <!-- Show More Button -->
             <div class="text-center">
-                {% if user.is_authenticated %}
-                    <a href="{% url 'skills:trending_skills_more' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all">
-                        <i class="fas fa-arrow-right mr-2"></i>View All Trending Skills
-                    </a>
-                {% else %}
-                    <a href="{% url 'accounts:login' %}?next={% url 'skills:trending_skills_more' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all">
-                        <i class="fas fa-sign-in-alt mr-2"></i>Login to View More
-                    </a>
-                {% endif %}
+                <a href="{% url 'skills:trending_skills_more' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all">
+                    <i class="fas fa-arrow-right mr-2"></i>View All Trending Skills
+                </a>
             </div>
         {% else %}
             <div class="text-center py-8">
@@ -295,19 +292,14 @@
                 </div>
                 <h3 class="text-xl font-bold text-gray-800 mb-2">No Trending Skills Yet</h3>
                 <p class="text-gray-600 mb-4">Be the first to add your skills!</p>
-                {% if user.is_authenticated %}
-                    <a href="{% url 'skills:add_skill' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-all">
-                        <i class="fas fa-plus mr-2"></i>Add Your Skill
-                    </a>
-                {% else %}
-                    <a href="{% url 'accounts:register' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-all">
-                        <i class="fas fa-user-plus mr-2"></i>Join to Add Skills
-                    </a>
-                {% endif %}
+                <a href="{% url 'skills:add_skill' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-all">
+                    <i class="fas fa-plus mr-2"></i>Add Your Skill
+                </a>
             </div>
         {% endif %}
     </div>
 </section>
+{% endif %}
 
 <!-- Categories Section -->
 <section class="py-16 bg-gray-50">
@@ -324,55 +316,28 @@
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {% for category in categories %}
                 <a href="?category={{ category.id }}" class="category-card bg-white p-6 rounded-xl text-center hover:shadow-lg transition-all transform hover:-translate-y-1">
-                    <div class="w-16 h-16 bg-{{ category.color|default:'blue' }}-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="{{ category.icon|default:'fas fa-star' }} text-{{ category.color|default:'blue' }}-600 text-2xl"></i>
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4" style="background-color: {{ category.color }}20;">
+                        <i class="{{ category.icon|default:'fas fa-star' }} text-2xl" style="color: {{ category.color }};"></i>
                     </div>
                     <h3 class="font-semibold text-gray-800 mb-2">{{ category.name }}</h3>
-                    <p class="text-sm text-gray-500">{{ category.skill_count }} skills</p>
+                    <p class="text-sm text-gray-500">{{ category.skill_count }} skill{{ category.skill_count|pluralize }}</p>
                 </a>
             {% empty %}
-                <!-- Fallback categories -->
-                <div class="category-card bg-white p-6 rounded-xl text-center">
-                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-code text-blue-600 text-2xl"></i>
+                <div class="col-span-full text-center py-8">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-layer-group text-gray-400 text-2xl"></i>
                     </div>
-                    <h3 class="font-semibold text-gray-800 mb-2">Technology</h3>
-                    <p class="text-sm text-gray-500">25+ skills</p>
-                </div>
-                <div class="category-card bg-white p-6 rounded-xl text-center">
-                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-language text-green-600 text-2xl"></i>
-                    </div>
-                    <h3 class="font-semibold text-gray-800 mb-2">Languages</h3>
-                    <p class="text-sm text-gray-500">15+ skills</p>
-                </div>
-                <div class="category-card bg-white p-6 rounded-xl text-center">
-                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-palette text-purple-600 text-2xl"></i>
-                    </div>
-                    <h3 class="font-semibold text-gray-800 mb-2">Arts & Design</h3>
-                    <p class="text-sm text-gray-500">20+ skills</p>
-                </div>
-                <div class="category-card bg-white p-6 rounded-xl text-center">
-                    <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-calculator text-yellow-600 text-2xl"></i>
-                    </div>
-                    <h3 class="font-semibold text-gray-800 mb-2">Mathematics</h3>
-                    <p class="text-sm text-gray-500">18+ skills</p>
-                </div>
-                <div class="category-card bg-white p-6 rounded-xl text-center">
-                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-music text-red-600 text-2xl"></i>
-                    </div>
-                    <h3 class="font-semibold text-gray-800 mb-2">Music</h3>
-                    <p class="text-sm text-gray-500">12+ skills</p>
-                </div>
-                <div class="category-card bg-white p-6 rounded-xl text-center">
-                    <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-chart-bar text-indigo-600 text-2xl"></i>
-                    </div>
-                    <h3 class="font-semibold text-gray-800 mb-2">Business</h3>
-                    <p class="text-sm text-gray-500">22+ skills</p>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">No Categories Available</h3>
+                    <p class="text-gray-600 mb-4">Categories will appear here once skills are added.</p>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'skills:add_skill' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-all">
+                            <i class="fas fa-plus mr-2"></i>Add Your Skill
+                        </a>
+                    {% else %}
+                        <a href="{% url 'accounts:register' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-all">
+                            <i class="fas fa-user-plus mr-2"></i>Join to Add Skills
+                        </a>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>
@@ -450,11 +415,38 @@
         }
     }
     
-    // Auto-submit form when filters change
-    document.querySelectorAll('select[name="category"], select[name="sort"]').forEach(select => {
-        select.addEventListener('change', function() {
-            this.closest('form').submit();
-        });
+    // Category dropdown change handler
+    document.getElementById('id_category').addEventListener('change', function() {
+        const categoryId = this.value;
+        const skillSelect = document.getElementById('id_skill');
+        
+        if (categoryId) {
+            skillSelect.disabled = true;
+            skillSelect.innerHTML = '<option value="">Loading skills...</option>';
+            
+            fetch(`{% url 'skills:get_skills_by_category_public' %}?category_id=${categoryId}`)
+                .then(response => response.json())
+                .then(data => {
+                    skillSelect.innerHTML = '<option value="">Select Skill...</option>';
+                    data.skills.forEach(skill => {
+                        skillSelect.innerHTML += `<option value="${skill.id}">${skill.name}</option>`;
+                    });
+                    skillSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    skillSelect.innerHTML = '<option value="">Error loading skills</option>';
+                    skillSelect.disabled = false;
+                });
+        } else {
+            skillSelect.innerHTML = '<option value="">Select Skill...</option>';
+            skillSelect.disabled = true;
+        }
+    });
+    
+    // Auto-submit form when sort option changes
+    document.querySelector('select[name="sort"]').addEventListener('change', function() {
+        this.closest('form').submit();
     });
 </script>
 

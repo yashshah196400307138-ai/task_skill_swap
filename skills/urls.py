@@ -34,4 +34,5 @@ urlpatterns = [
     # AJAX endpoints
     path('ajax/skill-autocomplete/', views.SkillAutocompleteView.as_view(), name='skill_autocomplete'),
     path('ajax/get-skills-by-category/', views.get_skills_by_category, name='get_skills_by_category'),
+    path('ajax/get-skills-by-category-public/', views.get_skills_by_category_public, name='get_skills_by_category_public'),
 ]
