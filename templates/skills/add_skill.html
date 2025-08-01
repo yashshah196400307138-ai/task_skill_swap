@@ -89,52 +89,123 @@
     </div>
 </section>
 
+{% endblock %}
+
+{% block extra_js %}
 <script>
+// Wait for DOM and jQuery to be ready
 $(document).ready(function() {
-    $('#id_skill_category').change(function() {
-        var categoryId = $(this).val();
+    console.log('Add skill form JavaScript loaded');
+    
+    // Get CSRF token for AJAX requests
+    function getCSRFToken() {
+        return $('[name=csrfmiddlewaretoken]').val();
+    }
+    
+    // Function to load skills by category
+    function loadSkillsByCategory(categoryId) {
         var skillSelect = $('#id_skill');
+        var skillHint = $('#skill-hint');
         
-        if (categoryId) {
-            skillSelect.prop('disabled', true);
-            skillSelect.html('<option value="">Loading skills...</option>');
-            $('#skill-hint').text('Loading skills for selected category...');
-            
-            $.ajax({
-                url: '{% url "skills:get_skills_by_category" %}',
-                data: {'category_id': categoryId},
-                success: function(response) {
-                    skillSelect.html('<option value="">Select a skill...</option>');
-                    if (response.skills.length > 0) {
-                        $.each(response.skills, function(index, skill) {
-                            skillSelect.append('<option value="' + skill.id + '">' + skill.name + '</option>');
-                        });
-                        skillSelect.prop('disabled', false);
-                        $('#skill-hint').text('Skills filtered by selected category.');
-                    } else {
-                        skillSelect.html('<option value="">No skills available in this category</option>');
-                        skillSelect.prop('disabled', true);
-                        $('#skill-hint').text('No skills available in this category.');
-                    }
-                },
-                error: function() {
-                    skillSelect.html('<option value="">Error loading skills</option>');
-                    skillSelect.prop('disabled', true);
-                    $('#skill-hint').text('Error loading skills. Please try again.');
-                }
-            });
-        } else {
-            // When no category is selected, disable skill dropdown
+        console.log('Loading skills for category ID:', categoryId);
+        
+        if (!categoryId) {
             skillSelect.html('<option value="">Select a category first...</option>');
             skillSelect.prop('disabled', true);
-            $('#skill-hint').text('Please select a category first to see available skills.');
+            skillHint.text('Please select a category first to see available skills.');
+            return;
         }
+        
+        // Show loading state
+        skillSelect.prop('disabled', true);
+        skillSelect.html('<option value="">Loading skills...</option>');
+        skillHint.text('Loading skills for selected category...');
+        
+        // Make AJAX request
+        $.ajax({
+            url: '{% url "skills:get_skills_by_category" %}',
+            method: 'GET',
+            data: {
+                'category_id': categoryId,
+                'csrfmiddlewaretoken': getCSRFToken()
+            },
+            beforeSend: function() {
+                console.log('Sending AJAX request to load skills');
+            },
+            success: function(response) {
+                console.log('AJAX response received:', response);
+                
+                skillSelect.html('<option value="">Select a skill...</option>');
+                
+                if (response.skills && response.skills.length > 0) {
+                    $.each(response.skills, function(index, skill) {
+                        skillSelect.append('<option value="' + skill.id + '">' + skill.name + '</option>');
+                    });
+                    skillSelect.prop('disabled', false);
+                    skillHint.text('Skills filtered by selected category.');
+                    console.log('Loaded', response.skills.length, 'skills');
+                } else {
+                    skillSelect.html('<option value="">No skills available in this category</option>');
+                    skillSelect.prop('disabled', true);
+                    skillHint.text('No skills available in this category.');
+                    console.log('No skills found for this category');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX error:', status, error);
+                console.error('Response text:', xhr.responseText);
+                
+                skillSelect.html('<option value="">Error loading skills</option>');
+                skillSelect.prop('disabled', true);
+                skillHint.text('Error loading skills. Please try again.');
+                
+                // Show user-friendly error message
+                if (xhr.status === 403) {
+                    skillHint.text('Permission denied. Please log in and try again.');
+                } else if (xhr.status === 404) {
+                    skillHint.text('Skills endpoint not found. Please contact support.');
+                } else {
+                    skillHint.text('Error loading skills. Please check your connection and try again.');
+                }
+            }
+        });
+    }
+    
+    // Handle category change
+    $('#id_skill_category').on('change', function() {
+        var categoryId = $(this).val();
+        console.log('Category changed to:', categoryId);
+        loadSkillsByCategory(categoryId);
     });
     
-    // Trigger change event if category is already selected (for editing)
-    if ($('#id_skill_category').val()) {
-        $('#id_skill_category').trigger('change');
+    // If category is already selected on page load (for editing), trigger change
+    var initialCategory = $('#id_skill_category').val();
+    if (initialCategory) {
+        console.log('Initial category detected:', initialCategory);
+        loadSkillsByCategory(initialCategory);
     }
+    
+    // Form validation
+    $('form').on('submit', function(e) {
+        var categorySelected = $('#id_skill_category').val();
+        var skillSelected = $('#id_skill').val();
+        
+        if (!categorySelected) {
+            e.preventDefault();
+            alert('Please select a skill category.');
+            $('#id_skill_category').focus();
+            return false;
+        }
+        
+        if (!skillSelected) {
+            e.preventDefault();
+            alert('Please select a skill.');
+            $('#id_skill').focus();
+            return false;
+        }
+        
+        console.log('Form submission validated successfully');
+    });
 });
 </script>
 {% endblock %}
