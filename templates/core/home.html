@@ -137,7 +137,7 @@
                         <i class="{{ skill.category.icon|default:'fas fa-star' }} text-{{ skill.category.color|default:'blue' }}-600"></i>
                     </div>
                     <h4 class="font-semibold text-gray-800 text-sm">{{ skill.name }}</h4>
-                    <p class="text-xs text-gray-500 mt-1">{{ skill.offered_count }} offers</p>
+                    <p class="text-xs text-gray-500 mt-1">{{ skill.offered_count }} teacher{{ skill.offered_count|pluralize }}</p>
                 </div>
             {% empty %}
                 <!-- Fallback if no skills data -->
@@ -146,42 +146,42 @@
                         <i class="fas fa-code text-blue-600"></i>
                     </div>
                     <h4 class="font-semibold text-gray-800 text-sm">Programming</h4>
-                    <p class="text-xs text-gray-500 mt-1">50+ offers</p>
+                    <p class="text-xs text-gray-500 mt-1">50+ teachers</p>
                 </div>
                 <div class="skill-card bg-white p-4 rounded-lg text-center">
                     <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                         <i class="fas fa-language text-green-600"></i>
                     </div>
                     <h4 class="font-semibold text-gray-800 text-sm">Languages</h4>
-                    <p class="text-xs text-gray-500 mt-1">35+ offers</p>
+                    <p class="text-xs text-gray-500 mt-1">35+ teachers</p>
                 </div>
                 <div class="skill-card bg-white p-4 rounded-lg text-center">
                     <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
                         <i class="fas fa-palette text-purple-600"></i>
                     </div>
                     <h4 class="font-semibold text-gray-800 text-sm">Design</h4>
-                    <p class="text-xs text-gray-500 mt-1">28+ offers</p>
+                    <p class="text-xs text-gray-500 mt-1">28+ teachers</p>
                 </div>
                 <div class="skill-card bg-white p-4 rounded-lg text-center">
                     <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
                         <i class="fas fa-calculator text-yellow-600"></i>
                     </div>
                     <h4 class="font-semibold text-gray-800 text-sm">Mathematics</h4>
-                    <p class="text-xs text-gray-500 mt-1">42+ offers</p>
+                    <p class="text-xs text-gray-500 mt-1">42+ teachers</p>
                 </div>
                 <div class="skill-card bg-white p-4 rounded-lg text-center">
                     <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
                         <i class="fas fa-music text-red-600"></i>
                     </div>
                     <h4 class="font-semibold text-gray-800 text-sm">Music</h4>
-                    <p class="text-xs text-gray-500 mt-1">25+ offers</p>
+                    <p class="text-xs text-gray-500 mt-1">25+ teachers</p>
                 </div>
                 <div class="skill-card bg-white p-4 rounded-lg text-center">
                     <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
                         <i class="fas fa-chart-bar text-indigo-600"></i>
                     </div>
                     <h4 class="font-semibold text-gray-800 text-sm">Business</h4>
-                    <p class="text-xs text-gray-500 mt-1">30+ offers</p>
+                    <p class="text-xs text-gray-500 mt-1">30+ teachers</p>
                 </div>
             {% endfor %}
         </div>
@@ -383,7 +383,7 @@
                 Explore Skills & Connect with Students
             </h2>
             <p class="text-lg text-gray-600 max-w-3xl mx-auto">
-                Discover a diverse range of skills offered by talented students and find the perfect learning partner for your journey.
+                Discover a diverse range of skills shared by talented students and find the perfect learning partner for your journey.
             </p>
         </div>
         
@@ -396,7 +396,7 @@
                     </div>
                     <h3 class="text-2xl font-bold text-gray-800 mb-4">Browse Skills</h3>
                     <p class="text-gray-600 mb-6">
-                        Explore thousands of skills offered by your fellow students. From programming and languages to music and design, 
+                        Explore thousands of skills shared by your fellow students. From programming and languages to music and design, 
                         find exactly what you want to learn or teach.
                     </p>
                     

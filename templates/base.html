@@ -98,7 +98,7 @@
                         <a href="{% url 'skills:skill_list' %}" class="nav-link px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors">
                             <i class="fas fa-graduation-cap mr-2"></i>Skills
                         </a>
-                        <a href="{% url 'skill_sessions:session_list' %}" class="nav-link px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors">
+                        <a href="{% url 'skill_sessions:session_management' %}" class="nav-link px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors">
                             <i class="fas fa-calendar mr-2"></i>Sessions
                         </a>
                     {% else %}
@@ -171,9 +171,6 @@
                                 <a href="{% url 'skills:offered_list' %}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50">
                                     <i class="fas fa-graduation-cap mr-3"></i>My Skills
                                 </a>
-                                <a href="{% url 'skill_sessions:session_list' %}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50">
-                                    <i class="fas fa-calendar mr-3"></i>My Sessions
-                                </a>
                                 <a href="{% url 'skill_sessions:session_management' %}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50">
                                     <i class="fas fa-tasks mr-3"></i>Session Management
                                 </a>
@@ -181,9 +178,6 @@
                                     <i class="fas fa-paper-plane mr-3"></i>My Requests
                                 </a>
                                 <hr class="my-1">
-                                <a href="{% url 'accounts:password_change' %}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50">
-                                    <i class="fas fa-key mr-3"></i>Change Password
-                                </a>
                                 <form id="logout-form" action="{% url 'accounts:logout' %}" method="post" style="margin:0;">
                                     {% csrf_token %}
                                     <button type="submit" class="flex items-center px-4 py-3 text-red-600 hover:bg-red-50 w-full text-left bg-transparent border-0">
@@ -215,7 +209,7 @@
                         <a href="{% url 'core:dashboard' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">Dashboard</a>
                         <a href="{% url 'core:requests' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">Requests</a>
                         <a href="{% url 'skills:skill_list' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">Skills</a>
-                        <a href="{% url 'skill_sessions:session_list' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">Sessions</a>
+                        <a href="{% url 'skill_sessions:session_management' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">Sessions</a>
                     {% endif %}
                 </div>
             </div>

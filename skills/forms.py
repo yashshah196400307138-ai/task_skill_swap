@@ -3,53 +3,61 @@ from .models import Skill, SkillCategory, OfferedSkill, DesiredSkill
 
 class OfferedSkillForm(forms.ModelForm):
     """Form for creating/editing offered skills"""
-    new_skill = forms.CharField(
-        max_length=100, required=False,
-        label="New Skill (if not listed)",
-        help_text="If your skill is not listed above, enter it here."
+    skill_category = forms.ModelChoiceField(
+        queryset=SkillCategory.objects.filter(is_active=True),
+        required=True,
+        label="Skill Category",
+        help_text="Select the category for your skill",
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
     skill = forms.ModelChoiceField(
-        queryset=None, required=False,
+        queryset=Skill.objects.none(),
+        required=True,
         label="Skill",
-        help_text="Select a skill from the list or enter a new one below."
+        help_text="Select a skill from the list",
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
     
     class Meta:
         model = OfferedSkill
-        fields = ['skill', 'new_skill', 'proficiency_level', 'description', 'years_of_experience', 'teaching_preference']
+        fields = ['skill_category', 'skill', 'proficiency_level', 'description', 'years_of_experience', 'teaching_preference']
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 4}),
+            'description': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
+            'proficiency_level': forms.Select(attrs={'class': 'form-control'}),
+            'years_of_experience': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+            'teaching_preference': forms.Select(attrs={'class': 'form-control'}),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        from .models import Skill
-        self.fields['skill'].queryset = Skill.objects.all()
-        self.fields['skill'].required = False
-    
+        
+        # If form has data (like from POST), filter skills by category
+        if 'skill_category' in self.data:
+            try:
+                category_id = int(self.data.get('skill_category'))
+                self.fields['skill'].queryset = Skill.objects.filter(category_id=category_id).order_by('name')
+            except (ValueError, TypeError):
+                pass
+        # If instance exists (editing), set the category and filter skills
+        elif self.instance.pk and hasattr(self.instance, 'skill') and self.instance.skill:
+            self.fields['skill_category'].initial = self.instance.skill.category
+            self.fields['skill'].queryset = Skill.objects.filter(category=self.instance.skill.category).order_by('name')
+        
     def clean(self):
         cleaned_data = super().clean()
         skill = cleaned_data.get('skill')
-        new_skill = cleaned_data.get('new_skill')
+        skill_category = cleaned_data.get('skill_category')
         user = getattr(self.instance, 'user', None)
         
-        if not skill and not new_skill:
-            raise forms.ValidationError('Please select a skill or enter a new skill.')
+        # Validate that skill belongs to selected category
+        if skill and skill_category and skill.category != skill_category:
+            raise forms.ValidationError('Selected skill does not belong to the selected category.')
         
-        if new_skill:
-            from .models import Skill, SkillCategory
-            # Assign to a default category if needed
-            default_category, _ = SkillCategory.objects.get_or_create(name='Other', defaults={'is_active': True})
-            skill_obj, created = Skill.objects.get_or_create(
-                name=new_skill.strip(),
-                defaults={'category': default_category}
-            )
-            cleaned_data['skill'] = skill_obj
-        
-        if cleaned_data.get('skill') and user:
-            existing = OfferedSkill.objects.filter(user=user, skill=cleaned_data['skill']).exclude(pk=self.instance.pk if self.instance.pk else None)
+        # Check for duplicate skills for the user
+        if skill and user:
+            existing = OfferedSkill.objects.filter(user=user, skill=skill).exclude(pk=self.instance.pk if self.instance.pk else None)
             if existing.exists():
-                raise forms.ValidationError(f'You already offer {cleaned_data["skill"].name}.')
+                raise forms.ValidationError(f'You already offer {skill.name}.')
         
         return cleaned_data
 

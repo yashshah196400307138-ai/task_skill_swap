@@ -6,6 +6,7 @@ app_name = 'skills'
 urlpatterns = [
     # Skill browsing
     path('', views.SkillListView.as_view(), name='skill_list'),
+    path('trending/more/', views.TrendingSkillsMoreView.as_view(), name='trending_skills_more'),
     path('categories/', views.SkillCategoryListView.as_view(), name='category_list'),
     path('category/<int:category_id>/', views.SkillCategoryDetailView.as_view(), name='category_detail'),
     
@@ -32,4 +33,5 @@ urlpatterns = [
     
     # AJAX endpoints
     path('ajax/skill-autocomplete/', views.SkillAutocompleteView.as_view(), name='skill_autocomplete'),
+    path('ajax/get-skills-by-category/', views.get_skills_by_category, name='get_skills_by_category'),
 ]

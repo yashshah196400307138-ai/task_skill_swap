@@ -19,7 +19,7 @@ urlpatterns = [
     # Password management
     path('password-change/', auth_views.PasswordChangeView.as_view(
         template_name='accounts/password_change.html',
-        success_url='/accounts/password-change/done/'
+        success_url='/accounts/profile/'
     ), name='password_change'),
     path('password-change/done/', auth_views.PasswordChangeDoneView.as_view(
         template_name='accounts/password_change_done.html'

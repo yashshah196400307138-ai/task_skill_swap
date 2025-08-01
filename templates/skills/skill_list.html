@@ -13,7 +13,7 @@
                 Discover <span class="text-yellow-300">Skills</span> to Learn
             </h1>
             <p class="text-lg lg:text-xl mb-8 max-w-3xl mx-auto">
-                Explore thousands of skills offered by your fellow students. Find the perfect match for your learning journey 
+                Explore thousands of skills shared by your fellow students. Find the perfect match for your learning journey 
                 and start your skill-swap adventure today.
             </p>
             
@@ -132,7 +132,7 @@
                             </div>
                             <div class="text-right">
                                 <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                                    {{ skill.offered_count }} offer{{ skill.offered_count|pluralize }}
+                                    {{ skill.offered_count }} teacher{{ skill.offered_count|pluralize }}
                                 </span>
                             </div>
                         </div>
@@ -155,7 +155,7 @@
                                 </a>
                             {% else %}
                                 <div class="w-full bg-gray-300 text-gray-500 py-2 px-4 rounded-lg text-center">
-                                    <i class="fas fa-clock mr-2"></i>No Offers Yet
+                                    <i class="fas fa-clock mr-2"></i>No Teachers Yet
                                 </div>
                             {% endif %}
                             
@@ -231,6 +231,79 @@
                         <i class="fas fa-times mr-2"></i>Clear All Filters
                     </a>
                 </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Trending Skills Section -->
+<section class="py-16 bg-white" id="trending-skills">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-fire text-orange-500 mr-3"></i>Trending Skills
+            </h2>
+            <p class="text-lg text-gray-600">
+                Discover the most popular skills being shared by students
+            </p>
+        </div>
+        
+        {% if trending_skills %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {% for skill in trending_skills %}
+                    <div class="skill-card bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all border">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ skill.name }}</h3>
+                                <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">{{ skill.category.name }}</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-blue-600">{{ skill.offered_count }}</div>
+                                <div class="text-xs text-gray-500">teacher{{ skill.offered_count|pluralize }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-fire text-orange-500 text-sm"></i>
+                                <span class="text-sm text-gray-600">Trending</span>
+                            </div>
+                            <a href="{% url 'skills:skill_list' %}?search={{ skill.name }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                Find Teachers <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Show More Button -->
+            <div class="text-center">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'skills:trending_skills_more' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all">
+                        <i class="fas fa-arrow-right mr-2"></i>View All Trending Skills
+                    </a>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}?next={% url 'skills:trending_skills_more' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login to View More
+                    </a>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="text-center py-8">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-chart-line text-gray-400 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">No Trending Skills Yet</h3>
+                <p class="text-gray-600 mb-4">Be the first to add your skills!</p>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'skills:add_skill' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-all">
+                        <i class="fas fa-plus mr-2"></i>Add Your Skill
+                    </a>
+                {% else %}
+                    <a href="{% url 'accounts:register' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-all">
+                        <i class="fas fa-user-plus mr-2"></i>Join to Add Skills
+                    </a>
+                {% endif %}
             </div>
         {% endif %}
     </div>
